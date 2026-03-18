@@ -6,36 +6,45 @@
 
 <style>
 body {
-    background: #111;
-    color: #fff;
+    background: black;
+    color: #00ffcc;
     font-family: monospace;
     display: flex;
     justify-content: center;
-    margin-top: 50px;
+    margin-top: 40px;
 }
 
 .container {
     text-align: center;
-    width: 400px;
+    width: 500px;
 }
 
 select, button {
     padding: 8px;
-    margin: 10px;
+    margin: 8px;
+    background: black;
+    color: #00ffcc;
+    border: 1px solid #00ffcc;
     cursor: pointer;
 }
 
 pre {
-    background: #000;
-    padding: 15px;
+    background: #050505;
+    padding: 20px;
     border-radius: 10px;
     text-align: left;
-    min-height: 120px;
+    min-height: 180px;
+    box-shadow: 0 0 10px #00ffcc;
 }
 
 #roastText {
-    margin-top: 10px;
+    margin-top: 15px;
     font-size: 16px;
+    min-height: 24px;
+}
+
+.toggle {
+    margin: 5px;
 }
 </style>
 </head>
@@ -52,18 +61,24 @@ pre {
         <option value="ghost">Ghost</option>
         <option value="alien">Alien</option>
         <option value="knight">Knight</option>
+        <option value="skull">Skull</option>
+        <option value="ai">AI Core</option>
     </select>
 
     <br>
 
-    <label>
-        <input type="checkbox" id="kindMode">
-        Kind Mode 😊
+    <label class="toggle">
+        <input type="checkbox" id="kindMode"> Kind 😊
+    </label>
+
+    <label class="toggle">
+        <input type="checkbox" id="savageMode"> Savage 🔥
     </label>
 
     <br>
 
     <button onclick="generateRoast()">Go</button>
+    <button onclick="randomCharacter()">Random Character 🎲</button>
 
     <pre id="ascii"></pre>
     <p id="roastText"></p>
@@ -73,155 +88,259 @@ pre {
 const characters = {
     cat: {
         art: `
-  /\\_/\\
- ( -.- )
-  > ^ <
+ /\\_/\\  
+( -_- ) 
+ / >🍪
         `,
         roasts: [
-            "I've seen smarter houseplants.",
-            "You type like you're afraid of the keyboard.",
-            "Even I wouldn't nap through your ideas.",
-            "You bring chaos to simplicity.",
-            "Your logic has... character."
+            "You bring confusion to simple tasks.",
+            "I've seen naps with more productivity.",
+            "You're consistently inconsistent.",
+            "You somehow missed the obvious."
+        ],
+        savage: [
+            "You're not even wrong, just creatively off.",
+            "That idea had potential… until you touched it.",
+            "You fumbled a thought mid-thought.",
+            "Even your mistakes are confused."
         ],
         kind: [
-            "You're doing better than you think.",
-            "Even small progress is still progress.",
-            "You're actually pretty creative.",
-            "I approve of your effort.",
-            "You’ve got potential, human."
+            "You're improving, even if slowly.",
+            "You’ve got your own unique style.",
+            "You’re trying—and that counts.",
+            "Keep going, you’re getting there."
         ]
     },
 
     robot: {
         art: `
- [-----]
- | o o |
- |  ^  |
- | --- |
- [-----]
+   [:::::]
+  | o  o |
+  |  --  |
+  |______|
+  /|    |\\
         `,
         roasts: [
-            "Error: intelligence not found.",
-            "Processing... nope, still not impressive.",
-            "You have the efficiency of a loading screen.",
-            "Task failed successfully.",
-            "Your input confuses even me."
+            "System detects questionable thinking.",
+            "Processing… result: needs work.",
+            "Your efficiency is impressively low.",
+            "Task execution: incomplete."
+        ],
+        savage: [
+            "You operate below minimum expectations.",
+            "Even random output would outperform that.",
+            "You lag behind your own potential.",
+            "System error: logic missing."
         ],
         kind: [
-            "System update: you are improving.",
-            "Your performance is acceptable. 👍",
-            "Confidence level rising.",
-            "You are learning fast.",
-            "Status: surprisingly capable."
+            "Performance improving.",
+            "You are learning steadily.",
+            "Output quality increasing.",
+            "Progress detected."
         ]
     },
 
     wizard: {
         art: `
-   /\\
-  /  \\
-  |==|
-  |  |
-  |  |
- /____\\
+      /\\
+     /__\\
+    ( oo )
+     \\__/ 
+     /||\\
         `,
         roasts: [
-            "I cast... mild disappointment.",
-            "Your skill level is magically low.",
-            "Even my weakest spell has more power than that.",
-            "You failed the simplest enchantment.",
-            "Your destiny needs revision."
+            "Your spell fizzled instantly.",
+            "Magic level: beginner forever.",
+            "Even apprentices outperform you.",
+            "That was… unfortunate."
+        ],
+        savage: [
+            "You summoned disappointment.",
+            "Your magic backfired immediately.",
+            "That spell insulted itself.",
+            "You enchanted failure."
         ],
         kind: [
-            "I sense great potential within you.",
-            "Your journey has only begun.",
-            "Even masters were once beginners.",
             "Magic grows with practice.",
-            "You are destined to improve."
+            "You’re on your journey.",
+            "Even masters struggled once.",
+            "You’ll improve over time."
         ]
     },
 
     ghost: {
         art: `
-  .-.
- (o o)
- | O \\
- |   |
- '~~~'
+   .-.
+  (o o)
+  | O |
+  |   |
+  '~~~'
         `,
         roasts: [
-            "I've seen more life in a rock.",
-            "You haunt... but not in a cool way.",
-            "Even I have more presence than you.",
-            "Boo. That’s your best effort?",
-            "You’re barely noticeable."
+            "You lack presence.",
+            "That effort was invisible.",
+            "Even silence is louder.",
+            "You barely made an impact."
+        ],
+        savage: [
+            "You vanished mid-effort.",
+            "Even nothing does more.",
+            "That attempt didn’t exist.",
+            "You ghosted your own idea."
         ],
         kind: [
-            "You stand out more than you think.",
-            "Your presence matters.",
-            "You bring something unique.",
-            "You're not invisible to the right people.",
-            "You’ve got quiet strength."
+            "You matter more than you think.",
+            "You have quiet strength.",
+            "Your presence counts.",
+            "You’re not invisible."
         ]
     },
 
     alien: {
         art: `
-  /\\_/\\
- ( o o )
-  > ^ <
+   /\\_/\\
+  ( o_o )
+  /|   |\\
         `,
         roasts: [
-            "On my planet, this would be embarrassing.",
-            "Your intelligence is... unusual.",
-            "We came lightyears for this?",
-            "Even space is less empty than that idea.",
-            "You confuse all known species."
+            "Your logic is… foreign.",
+            "We do not understand this choice.",
+            "That decision was unusual.",
+            "You confuse all species."
+        ],
+        savage: [
+            "Even space rejects that idea.",
+            "You broke universal logic.",
+            "That thought shouldn’t exist.",
+            "Reality disagrees with you."
         ],
         kind: [
-            "You are uniquely human. Fascinating.",
-            "Your ideas are... interesting in a good way.",
-            "You show promise.",
-            "We approve of your development.",
+            "You are uniquely creative.",
+            "Your ideas are interesting.",
+            "You show potential.",
             "You are evolving."
         ]
     },
 
     knight: {
         art: `
-   O
-  /|\\
-  / \\
+    O
+   /|\\
+   / \\
+  /___\\
         `,
         roasts: [
-            "That was not a noble attempt.",
-            "You fight like a confused peasant.",
-            "Your strategy is questionable.",
-            "Even a squire could do better.",
-            "You dropped your skill somewhere."
+            "That was not noble.",
+            "Your strategy failed.",
+            "You stumbled immediately.",
+            "A weak attempt."
+        ],
+        savage: [
+            "You lost before starting.",
+            "That battle was embarrassing.",
+            "You dropped your skill entirely.",
+            "Defeat was guaranteed."
         ],
         kind: [
-            "A noble effort indeed.",
-            "You improve with every battle.",
-            "Your courage is admirable.",
-            "You are on the right path.",
-            "A true knight in progress."
+            "You fight bravely.",
+            "You improve each time.",
+            "You are learning.",
+            "Keep going, knight."
+        ]
+    },
+
+    skull: {
+        art: `
+   _____
+  /     \\
+ | () () |
+  \\  ^  /
+   |||||
+   |||||
+        `,
+        roasts: [
+            "That idea is dead.",
+            "No life detected here.",
+            "That thought expired instantly.",
+            "You buried your own effort."
+        ],
+        savage: [
+            "That was DOA.",
+            "Even bones have more structure.",
+            "Your logic collapsed instantly.",
+            "That idea fossilized."
+        ],
+        kind: [
+            "You can rebuild stronger.",
+            "Mistakes help you grow.",
+            "You’ll come back better.",
+            "This isn’t the end."
+        ]
+    },
+
+    ai: {
+        art: `
+  [ CORE ]
+ < 0   0 >
+   \\___/
+   /|||\\
+        `,
+        roasts: [
+            "Your output is suboptimal.",
+            "Prediction: needs improvement.",
+            "That was inefficient.",
+            "Low-quality result."
+        ],
+        savage: [
+            "You underperform consistently.",
+            "Even random chance beats that.",
+            "That output degraded reality.",
+            "Optimization failed completely."
+        ],
+        kind: [
+            "You are improving.",
+            "Learning curve detected.",
+            "Keep iterating.",
+            "You’re getting better."
         ]
     }
 };
 
+function typeText(text) {
+    const element = document.getElementById("roastText");
+    element.textContent = "";
+    let i = 0;
+
+    const interval = setInterval(() => {
+        element.textContent += text[i];
+        i++;
+        if (i >= text.length) clearInterval(interval);
+    }, 20);
+}
+
 function generateRoast() {
     const selected = document.getElementById("characterSelect").value;
-    const kindMode = document.getElementById("kindMode").checked;
+    const kind = document.getElementById("kindMode").checked;
+    const savage = document.getElementById("savageMode").checked;
 
     const character = characters[selected];
-    const lines = kindMode ? character.kind : character.roasts;
+
+    let lines;
+    if (kind) lines = character.kind;
+    else if (savage) lines = character.savage;
+    else lines = character.roasts;
 
     const randomLine = lines[Math.floor(Math.random() * lines.length)];
 
     document.getElementById("ascii").textContent = character.art;
-    document.getElementById("roastText").textContent = randomLine;
+    typeText(randomLine);
+}
+
+function randomCharacter() {
+    const keys = Object.keys(characters);
+    const randomKey = keys[Math.floor(Math.random() * keys.length)];
+    document.getElementById("characterSelect").value = randomKey;
+    generateRoast();
 }
 </script>
 
