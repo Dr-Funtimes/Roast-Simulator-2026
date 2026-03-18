@@ -2,347 +2,254 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>ASCII Roaster 🔥</title>
+<title>ASCII Roaster</title>
 
 <style>
 body {
-    background: black;
+    background: #0a0a0a;
     color: #00ffcc;
     font-family: monospace;
     display: flex;
     justify-content: center;
     margin-top: 40px;
 }
-
 .container {
+    width: 700px;
     text-align: center;
-    width: 500px;
 }
-
-select, button {
-    padding: 8px;
-    margin: 8px;
+button, select, input {
     background: black;
     color: #00ffcc;
     border: 1px solid #00ffcc;
-    cursor: pointer;
+    padding: 8px;
+    margin: 6px;
 }
-
 pre {
     background: #050505;
     padding: 20px;
     border-radius: 10px;
-    text-align: left;
-    min-height: 180px;
-    box-shadow: 0 0 10px #00ffcc;
+    min-height: 220px;
+    box-shadow: 0 0 12px #00ffcc;
 }
-
-#roastText {
+#text {
     margin-top: 15px;
-    font-size: 16px;
     min-height: 24px;
-}
-
-.toggle {
-    margin: 5px;
 }
 </style>
 </head>
 
 <body>
-
 <div class="container">
-    <h1>ASCII Roaster 🔥</h1>
+<h1>ASCII Roaster</h1>
 
-    <select id="characterSelect">
-        <option value="cat">Grumpy Cat</option>
-        <option value="robot">Robot</option>
-        <option value="wizard">Wizard</option>
-        <option value="ghost">Ghost</option>
-        <option value="alien">Alien</option>
-        <option value="knight">Knight</option>
-        <option value="skull">Skull</option>
-        <option value="ai">AI Core</option>
-    </select>
+<select id="char"></select><br>
 
-    <br>
+<label><input type="checkbox" id="kind"> Kind 😊</label>
+<label><input type="checkbox" id="savage"> Savage 🔥</label><br>
 
-    <label class="toggle">
-        <input type="checkbox" id="kindMode"> Kind 😊
-    </label>
+<button onclick="generate()">Roast</button>
+<button onclick="randomAll()">Random 🎲</button><br>
 
-    <label class="toggle">
-        <input type="checkbox" id="savageMode"> Savage 🔥
-    </label>
+<input id="customInput" placeholder="Add your own roast">
+<button onclick="addCustom()">Add</button>
 
-    <br>
-
-    <button onclick="generateRoast()">Go</button>
-    <button onclick="randomCharacter()">Random Character 🎲</button>
-
-    <pre id="ascii"></pre>
-    <p id="roastText"></p>
+<pre id="ascii"></pre>
+<div id="text"></div>
 </div>
 
 <script>
-const characters = {
-    cat: {
-        art: `
- /\\_/\\  
-( -_- ) 
- / >🍪
-        `,
-        roasts: [
-            "You bring confusion to simple tasks.",
-            "I've seen naps with more productivity.",
-            "You're consistently inconsistent.",
-            "You somehow missed the obvious."
-        ],
-        savage: [
-            "You're not even wrong, just creatively off.",
-            "That idea had potential… until you touched it.",
-            "You fumbled a thought mid-thought.",
-            "Even your mistakes are confused."
-        ],
-        kind: [
-            "You're improving, even if slowly.",
-            "You’ve got your own unique style.",
-            "You’re trying—and that counts.",
-            "Keep going, you’re getting there."
-        ]
-    },
+let saved = JSON.parse(localStorage.getItem("customRoasts")) || {};
+let history = {};
 
-    robot: {
-        art: `
-   [:::::]
-  | o  o |
-  |  --  |
-  |______|
-  /|    |\\
-        `,
-        roasts: [
-            "System detects questionable thinking.",
-            "Processing… result: needs work.",
-            "Your efficiency is impressively low.",
-            "Task execution: incomplete."
-        ],
-        savage: [
-            "You operate below minimum expectations.",
-            "Even random output would outperform that.",
-            "You lag behind your own potential.",
-            "System error: logic missing."
-        ],
-        kind: [
-            "Performance improving.",
-            "You are learning steadily.",
-            "Output quality increasing.",
-            "Progress detected."
-        ]
-    },
+// ===== HELPER =====
+function expand(base) {
+    return [
+        base + ".",
+        "Honestly, " + base.toLowerCase() + ".",
+        base + " and you stuck with it.",
+        base + " which is impressive.",
+        "You really decided " + base.toLowerCase() + ".",
+        base + "… interesting choice.",
+        base + " and didn’t question it.",
+        base + " with confidence.",
+        base + " and committed fully.",
+        base + " like that was the plan.",
+        "Somehow, " + base.toLowerCase() + ".",
+        base + " without hesitation.",
+        base + " and kept going.",
+        base + " like it made sense.",
+        base + " and doubled down.",
+        base + " repeatedly.",
+        base + " and never corrected it.",
+        base + " all the way through.",
+        base + " from start to finish.",
+        base + " and called it done.",
+        base + " and moved on.",
+        base + " like nothing was wrong.",
+        base + " and felt good about it.",
+        base + " with full commitment.",
+        base + " and didn’t look back.",
+        base + " instantly.",
+        base + " without thinking.",
+        base + " and stuck with it anyway.",
+        base + " like it was correct.",
+        base + " and that happened."
+    ];
+}
 
-    wizard: {
-        art: `
-      /\\
-     /__\\
-    ( oo )
-     \\__/ 
-     /||\\
-        `,
-        roasts: [
-            "Your spell fizzled instantly.",
-            "Magic level: beginner forever.",
-            "Even apprentices outperform you.",
-            "That was… unfortunate."
-        ],
-        savage: [
-            "You summoned disappointment.",
-            "Your magic backfired immediately.",
-            "That spell insulted itself.",
-            "You enchanted failure."
-        ],
-        kind: [
-            "Magic grows with practice.",
-            "You’re on your journey.",
-            "Even masters struggled once.",
-            "You’ll improve over time."
-        ]
-    },
+// ===== CHARACTERS =====
+const chars = {
 
-    ghost: {
-        art: `
-   .-.
-  (o o)
-  | O |
-  |   |
-  '~~~'
-        `,
-        roasts: [
-            "You lack presence.",
-            "That effort was invisible.",
-            "Even silence is louder.",
-            "You barely made an impact."
-        ],
-        savage: [
-            "You vanished mid-effort.",
-            "Even nothing does more.",
-            "That attempt didn’t exist.",
-            "You ghosted your own idea."
-        ],
-        kind: [
-            "You matter more than you think.",
-            "You have quiet strength.",
-            "Your presence counts.",
-            "You’re not invisible."
-        ]
-    },
+cat: {
+art:` /\\_/\\\n( -_- )\n > ^ <`,
+roast: expand("you made that harder than it needed to be"),
+savage: expand("that was completely wrong"),
+kind: expand("you're improving steadily"),
+rare:["⭐ The cat nods approvingly.","⭐ Rare respect earned.","⭐ Even the cat is impressed."]
+},
 
-    alien: {
-        art: `
-   /\\_/\\
-  ( o_o )
-  /|   |\\
-        `,
-        roasts: [
-            "Your logic is… foreign.",
-            "We do not understand this choice.",
-            "That decision was unusual.",
-            "You confuse all species."
-        ],
-        savage: [
-            "Even space rejects that idea.",
-            "You broke universal logic.",
-            "That thought shouldn’t exist.",
-            "Reality disagrees with you."
-        ],
-        kind: [
-            "You are uniquely creative.",
-            "Your ideas are interesting.",
-            "You show potential.",
-            "You are evolving."
-        ]
-    },
+robot: {
+art:`[:::::]\n| o o |\n|  -  |\n|_____|`,
+roast: expand("output requires revision"),
+savage: expand("critical logic failure"),
+kind: expand("performance improving"),
+rare:["⭐ SYSTEM PERFECT.","⭐ ZERO ERRORS.","⭐ PERFORMANCE MAX"]
+},
 
-    knight: {
-        art: `
-    O
-   /|\\
-   / \\
-  /___\\
-        `,
-        roasts: [
-            "That was not noble.",
-            "Your strategy failed.",
-            "You stumbled immediately.",
-            "A weak attempt."
-        ],
-        savage: [
-            "You lost before starting.",
-            "That battle was embarrassing.",
-            "You dropped your skill entirely.",
-            "Defeat was guaranteed."
-        ],
-        kind: [
-            "You fight bravely.",
-            "You improve each time.",
-            "You are learning.",
-            "Keep going, knight."
-        ]
-    },
+wizard: {
+art:` /\\\n/__\\\n(oo)\n/||\\`,
+roast: expand("that spell needed more thought"),
+savage: expand("you summoned failure"),
+kind: expand("your magic is growing"),
+rare:["⭐ Perfect spell cast.","⭐ Magic flows correctly.","⭐ The wizard approves."]
+},
 
-    skull: {
-        art: `
-   _____
-  /     \\
- | () () |
-  \\  ^  /
-   |||||
-   |||||
-        `,
-        roasts: [
-            "That idea is dead.",
-            "No life detected here.",
-            "That thought expired instantly.",
-            "You buried your own effort."
-        ],
-        savage: [
-            "That was DOA.",
-            "Even bones have more structure.",
-            "Your logic collapsed instantly.",
-            "That idea fossilized."
-        ],
-        kind: [
-            "You can rebuild stronger.",
-            "Mistakes help you grow.",
-            "You’ll come back better.",
-            "This isn’t the end."
-        ]
-    },
+glitch: {
+art:`[0_0]#\n /|\\\n / \\`,
+roast: expand("signal unclear"),
+savage: expand("total system failure"),
+kind: expand("system stabilizing"),
+rare:["⭐ SIGNAL LOCKED.","⭐ ERROR ZERO.","⭐ STABLE STATE"]
+},
 
-    ai: {
-        art: `
-  [ CORE ]
- < 0   0 >
-   \\___/
-   /|||\\
-        `,
-        roasts: [
-            "Your output is suboptimal.",
-            "Prediction: needs improvement.",
-            "That was inefficient.",
-            "Low-quality result."
-        ],
-        savage: [
-            "You underperform consistently.",
-            "Even random chance beats that.",
-            "That output degraded reality.",
-            "Optimization failed completely."
-        ],
-        kind: [
-            "You are improving.",
-            "Learning curve detected.",
-            "Keep iterating.",
-            "You’re getting better."
-        ]
-    }
+frog: {
+art:`(•_•)\n<) )╯\n / \\`,
+roast: expand("that was a weird jump"),
+savage: expand("you jumped into failure"),
+kind: expand("nice hop"),
+rare:["⭐ Perfect landing.","⭐ Smooth jump.","⭐ Frog approves."]
+},
+
+stone: {
+art:`[----]\n |  |\n |__|`,
+roast: expand("you stayed stuck"),
+savage: expand("total stagnation"),
+kind: expand("steady progress"),
+rare:["⭐ Unshakable.","⭐ Perfect stability.","⭐ Solid."]
+}
+
 };
 
-function typeText(text) {
-    const element = document.getElementById("roastText");
-    element.textContent = "";
+// ===== INIT =====
+function load() {
+    const select = document.getElementById("char");
+    for (let key in chars) {
+        let opt = document.createElement("option");
+        opt.value = key;
+        opt.textContent = key;
+        select.appendChild(opt);
+    }
+}
+
+// ===== UTIL =====
+function type(text) {
+    const el = document.getElementById("text");
+    el.textContent = "";
     let i = 0;
-
-    const interval = setInterval(() => {
-        element.textContent += text[i];
-        i++;
-        if (i >= text.length) clearInterval(interval);
-    }, 20);
+    const int = setInterval(()=>{
+        el.textContent += text[i];
+        if(++i>=text.length) clearInterval(int);
+    },15);
 }
 
-function generateRoast() {
-    const selected = document.getElementById("characterSelect").value;
-    const kind = document.getElementById("kindMode").checked;
-    const savage = document.getElementById("savageMode").checked;
-
-    const character = characters[selected];
-
-    let lines;
-    if (kind) lines = character.kind;
-    else if (savage) lines = character.savage;
-    else lines = character.roasts;
-
-    const randomLine = lines[Math.floor(Math.random() * lines.length)];
-
-    document.getElementById("ascii").textContent = character.art;
-    typeText(randomLine);
+function getPool(key,mode){
+    let base = chars[key][mode];
+    let custom = saved[key]?.[mode] || [];
+    return [...base,...custom];
 }
 
-function randomCharacter() {
-    const keys = Object.keys(characters);
-    const randomKey = keys[Math.floor(Math.random() * keys.length)];
-    document.getElementById("characterSelect").value = randomKey;
-    generateRoast();
+function pickUnique(key,mode,pool){
+    const id = key+"_"+mode;
+    if(!history[id]) history[id]=[];
+
+    let available = pool.filter((_,i)=>!history[id].includes(i));
+    if(available.length===0){
+        history[id]=[];
+        available=pool;
+    }
+
+    const choice = available[Math.floor(Math.random()*available.length)];
+    const index = pool.indexOf(choice);
+    history[id].push(index);
+    return choice;
 }
+
+// ===== MAIN =====
+function generate(){
+    const key = document.getElementById("char").value;
+    const kind = document.getElementById("kind").checked;
+    const savage = document.getElementById("savage").checked;
+
+    let mode="roast";
+    if(kind) mode="kind";
+    else if(savage) mode="savage";
+
+    let pool = getPool(key,mode);
+    let line;
+
+    if(Math.random()<0.1){
+        const rare = chars[key].rare;
+        line = rare[Math.floor(Math.random()*rare.length)];
+    } else {
+        line = pickUnique(key,mode,pool);
+    }
+
+    document.getElementById("ascii").textContent = chars[key].art;
+    type(line);
+}
+
+function randomAll(){
+    const keys = Object.keys(chars);
+    const k = keys[Math.floor(Math.random()*keys.length)];
+    document.getElementById("char").value = k;
+    generate();
+}
+
+// ===== CUSTOM =====
+function addCustom(){
+    const input=document.getElementById("customInput");
+    const text=input.value.trim();
+    if(!text) return;
+
+    const key=document.getElementById("char").value;
+    const kind=document.getElementById("kind").checked;
+    const savage=document.getElementById("savage").checked;
+
+    let mode="roast";
+    if(kind) mode="kind";
+    else if(savage) mode="savage";
+
+    if(!saved[key]) saved[key]={};
+    if(!saved[key][mode]) saved[key][mode]=[];
+
+    saved[key][mode].push(text);
+    localStorage.setItem("customRoasts",JSON.stringify(saved));
+
+    input.value="";
+    alert("Saved!");
+}
+
+load();
 </script>
-
 </body>
 </html>
