@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>ASCII Roaster</title>
+<title>ASCII Roaster Ultimate+</title>
 
 <style>
 body {
@@ -31,16 +31,14 @@ pre {
     min-height: 220px;
     box-shadow: 0 0 12px #00ffcc;
 }
-#text {
-    margin-top: 15px;
-    min-height: 24px;
-}
+#text { margin-top: 15px; min-height: 24px; }
+.cooldown { color: #ff5555; }
 </style>
 </head>
 
 <body>
 <div class="container">
-<h1>ASCII Roaster</h1>
+<h1>ASCII Roaster Ultimate+</h1>
 
 <select id="char"></select><br>
 
@@ -48,205 +46,158 @@ pre {
 <label><input type="checkbox" id="savage"> Savage 🔥</label><br>
 
 <button onclick="generate()">Roast</button>
-<button onclick="randomAll()">Random 🎲</button><br>
+<button onclick="randomAll()">Random 🎲</button>
+<button onclick="toggleDecode()">Decode 🔐</button>
 
-<input id="customInput" placeholder="Add your own roast">
-<button onclick="addCustom()">Add</button>
+<div id="cooldownText"></div>
 
 <pre id="ascii"></pre>
 <div id="text"></div>
 </div>
 
 <script>
-let saved = JSON.parse(localStorage.getItem("customRoasts")) || {};
-let history = {};
+// ================= STATE =================
+let cooldown = false;
+let decodeMode = false;
+let unlockSecret = false;
+let clickCount = 0;
 
-// ===== HELPER =====
-function expand(base) {
-    return [
-        base + ".",
-        "Honestly, " + base.toLowerCase() + ".",
-        base + " and you stuck with it.",
-        base + " which is impressive.",
-        "You really decided " + base.toLowerCase() + ".",
-        base + "… interesting choice.",
-        base + " and didn’t question it.",
-        base + " with confidence.",
-        base + " and committed fully.",
-        base + " like that was the plan.",
-        "Somehow, " + base.toLowerCase() + ".",
-        base + " without hesitation.",
-        base + " and kept going.",
-        base + " like it made sense.",
-        base + " and doubled down.",
-        base + " repeatedly.",
-        base + " and never corrected it.",
-        base + " all the way through.",
-        base + " from start to finish.",
-        base + " and called it done.",
-        base + " and moved on.",
-        base + " like nothing was wrong.",
-        base + " and felt good about it.",
-        base + " with full commitment.",
-        base + " and didn’t look back.",
-        base + " instantly.",
-        base + " without thinking.",
-        base + " and stuck with it anyway.",
-        base + " like it was correct.",
-        base + " and that happened."
-    ];
+// ================= HELPERS =================
+function expand(base){
+    return Array.from({length:30},(_,i)=> base + " ("+(i+1)+")");
 }
 
-// ===== CHARACTERS =====
+// Caesar cipher
+function encode(str){
+    return str.replace(/[a-z]/gi, c =>
+        String.fromCharCode(
+            (c <= "Z" ? 90 : 122) >= (c = c.charCodeAt(0) + 3) ? c : c - 26
+        )
+    );
+}
+function decode(str){
+    return str.replace(/[a-z]/gi, c =>
+        String.fromCharCode(
+            (c <= "Z" ? 90 : 122) >= (c = c.charCodeAt(0) - 3) ? c : c + 26
+        )
+    );
+}
+
+// ================= CHARACTERS =================
 const chars = {
-
-cat: {
-art:` /\\_/\\\n( -_- )\n > ^ <`,
-roast: expand("you made that harder than it needed to be"),
-savage: expand("that was completely wrong"),
-kind: expand("you're improving steadily"),
-rare:["⭐ The cat nods approvingly.","⭐ Rare respect earned.","⭐ Even the cat is impressed."]
-},
-
-robot: {
-art:`[:::::]\n| o o |\n|  -  |\n|_____|`,
-roast: expand("output requires revision"),
-savage: expand("critical logic failure"),
-kind: expand("performance improving"),
-rare:["⭐ SYSTEM PERFECT.","⭐ ZERO ERRORS.","⭐ PERFORMANCE MAX"]
-},
-
-wizard: {
-art:` /\\\n/__\\\n(oo)\n/||\\`,
-roast: expand("that spell needed more thought"),
-savage: expand("you summoned failure"),
-kind: expand("your magic is growing"),
-rare:["⭐ Perfect spell cast.","⭐ Magic flows correctly.","⭐ The wizard approves."]
-},
-
-glitch: {
-art:`[0_0]#\n /|\\\n / \\`,
-roast: expand("signal unclear"),
-savage: expand("total system failure"),
-kind: expand("system stabilizing"),
-rare:["⭐ SIGNAL LOCKED.","⭐ ERROR ZERO.","⭐ STABLE STATE"]
-},
-
-frog: {
-art:`(•_•)\n<) )╯\n / \\`,
-roast: expand("that was a weird jump"),
-savage: expand("you jumped into failure"),
-kind: expand("nice hop"),
-rare:["⭐ Perfect landing.","⭐ Smooth jump.","⭐ Frog approves."]
-},
-
-stone: {
-art:`[----]\n |  |\n |__|`,
-roast: expand("you stayed stuck"),
-savage: expand("total stagnation"),
-kind: expand("steady progress"),
-rare:["⭐ Unshakable.","⭐ Perfect stability.","⭐ Solid."]
-}
-
+cat:{art:"/\\_/\\\n( -_- )\n > ^ <",roast:expand("you overthought it"),savage:expand("that was wrong"),kind:expand("you're improving"),rare:["⭐ cat approves"]},
+robot:{art:"[:::::]",roast:expand("output flawed"),savage:expand("system failure"),kind:expand("performance rising"),rare:["⭐ perfect system"]},
+wizard:{art:"/\\\n||",roast:expand("bad spell"),savage:expand("spell failure"),kind:expand("magic growing"),rare:["⭐ perfect spell"]},
+glitch:{art:"[0_0]#",roast:expand("signal weak"),savage:expand("fatal error"),kind:expand("system stabilizing"),rare:["⭐ signal locked"]},
+frog:{art:"(•_•)",roast:expand("bad jump"),savage:expand("you failed jump"),kind:expand("nice hop"),rare:["⭐ perfect jump"]},
+stone:{art:"[----]",roast:expand("you stayed stuck"),savage:expand("no progress"),kind:expand("steady progress"),rare:["⭐ solid"]}
 };
 
-// ===== INIT =====
-function load() {
-    const select = document.getElementById("char");
-    for (let key in chars) {
-        let opt = document.createElement("option");
-        opt.value = key;
-        opt.textContent = key;
-        select.appendChild(opt);
+// 🕵️ SECRET CHARACTER
+const secret = {
+art: "???",
+roast: ["you found this..."],
+savage: ["you weren't supposed to see this"],
+kind: ["you decoded the system"],
+rare: ["⭐ SECRET MASTER"]
+};
+
+// ================= INIT =================
+function load(){
+    const sel=document.getElementById("char");
+    for(let k in chars){
+        let o=document.createElement("option");
+        o.value=k;
+        o.textContent=k;
+        sel.appendChild(o);
     }
 }
 
-// ===== UTIL =====
-function type(text) {
-    const el = document.getElementById("text");
-    el.textContent = "";
-    let i = 0;
-    const int = setInterval(()=>{
-        el.textContent += text[i];
+// ================= COOLDOWN =================
+function startCooldown(){
+    cooldown=true;
+    let t=2;
+    const el=document.getElementById("cooldownText");
+
+    const int=setInterval(()=>{
+        el.textContent="Cooldown: "+t+"s";
+        el.className="cooldown";
+        t--;
+        if(t<0){
+            clearInterval(int);
+            cooldown=false;
+            el.textContent="";
+        }
+    },1000);
+}
+
+// ================= MAIN =================
+function generate(){
+    if(cooldown) return;
+
+    clickCount++;
+    if(clickCount===10 && !unlockSecret){
+        unlockSecret=true;
+        let sel=document.getElementById("char");
+        let o=document.createElement("option");
+        o.value="secret";
+        o.textContent="???";
+        sel.appendChild(o);
+        alert("You unlocked something...");
+    }
+
+    const key=document.getElementById("char").value;
+    let c = key==="secret" ? secret : chars[key];
+
+    let mode="roast";
+    if(document.getElementById("kind").checked) mode="kind";
+    else if(document.getElementById("savage").checked) mode="savage";
+
+    let pool=c[mode];
+    let line;
+
+    if(Math.random()<0.1){
+        line=c.rare[Math.floor(Math.random()*c.rare.length)];
+    } else {
+        line=pool[Math.floor(Math.random()*pool.length)];
+    }
+
+    // encode if secret
+    if(key==="secret" && !decodeMode){
+        line = encode(line);
+    }
+    if(key==="secret" && decodeMode){
+        line = decode(line);
+    }
+
+    document.getElementById("ascii").textContent=c.art;
+    type(line);
+
+    startCooldown();
+}
+
+// typing
+function type(text){
+    const el=document.getElementById("text");
+    el.textContent="";
+    let i=0;
+    const int=setInterval(()=>{
+        el.textContent+=text[i];
         if(++i>=text.length) clearInterval(int);
     },15);
 }
 
-function getPool(key,mode){
-    let base = chars[key][mode];
-    let custom = saved[key]?.[mode] || [];
-    return [...base,...custom];
-}
-
-function pickUnique(key,mode,pool){
-    const id = key+"_"+mode;
-    if(!history[id]) history[id]=[];
-
-    let available = pool.filter((_,i)=>!history[id].includes(i));
-    if(available.length===0){
-        history[id]=[];
-        available=pool;
-    }
-
-    const choice = available[Math.floor(Math.random()*available.length)];
-    const index = pool.indexOf(choice);
-    history[id].push(index);
-    return choice;
-}
-
-// ===== MAIN =====
-function generate(){
-    const key = document.getElementById("char").value;
-    const kind = document.getElementById("kind").checked;
-    const savage = document.getElementById("savage").checked;
-
-    let mode="roast";
-    if(kind) mode="kind";
-    else if(savage) mode="savage";
-
-    let pool = getPool(key,mode);
-    let line;
-
-    if(Math.random()<0.1){
-        const rare = chars[key].rare;
-        line = rare[Math.floor(Math.random()*rare.length)];
-    } else {
-        line = pickUnique(key,mode,pool);
-    }
-
-    document.getElementById("ascii").textContent = chars[key].art;
-    type(line);
-}
-
 function randomAll(){
-    const keys = Object.keys(chars);
-    const k = keys[Math.floor(Math.random()*keys.length)];
-    document.getElementById("char").value = k;
+    const keys=Object.keys(chars);
+    const k=keys[Math.floor(Math.random()*keys.length)];
+    document.getElementById("char").value=k;
     generate();
 }
 
-// ===== CUSTOM =====
-function addCustom(){
-    const input=document.getElementById("customInput");
-    const text=input.value.trim();
-    if(!text) return;
-
-    const key=document.getElementById("char").value;
-    const kind=document.getElementById("kind").checked;
-    const savage=document.getElementById("savage").checked;
-
-    let mode="roast";
-    if(kind) mode="kind";
-    else if(savage) mode="savage";
-
-    if(!saved[key]) saved[key]={};
-    if(!saved[key][mode]) saved[key][mode]=[];
-
-    saved[key][mode].push(text);
-    localStorage.setItem("customRoasts",JSON.stringify(saved));
-
-    input.value="";
-    alert("Saved!");
+// decode toggle
+function toggleDecode(){
+    decodeMode=!decodeMode;
+    alert("Decode mode: "+(decodeMode?"ON":"OFF"));
 }
 
 load();
