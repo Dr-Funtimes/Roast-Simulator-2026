@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ASCII Roaster 🔥</title>
+
+<style>
+body {
+    background: #111;
+    color: #fff;
+    font-family: monospace;
+    display: flex;
+    justify-content: center;
+    margin-top: 50px;
+}
+
+.container {
+    text-align: center;
+    width: 400px;
+}
+
+select, button {
+    padding: 8px;
+    margin: 10px;
+    cursor: pointer;
+}
+
+pre {
+    background: #000;
+    padding: 15px;
+    border-radius: 10px;
+    text-align: left;
+    min-height: 120px;
+}
+
+#roastText {
+    margin-top: 10px;
+    font-size: 16px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>ASCII Roaster 🔥</h1>
+
+    <select id="characterSelect">
+        <option value="cat">Grumpy Cat</option>
+        <option value="robot">Robot</option>
+        <option value="wizard">Wizard</option>
+        <option value="ghost">Ghost</option>
+        <option value="alien">Alien</option>
+        <option value="knight">Knight</option>
+    </select>
+
+    <br>
+
+    <label>
+        <input type="checkbox" id="kindMode">
+        Kind Mode 😊
+    </label>
+
+    <br>
+
+    <button onclick="generateRoast()">Go</button>
+
+    <pre id="ascii"></pre>
+    <p id="roastText"></p>
+</div>
+
+<script>
+const characters = {
+    cat: {
+        art: `
+  /\\_/\\
+ ( -.- )
+  > ^ <
+        `,
+        roasts: [
+            "I've seen smarter houseplants.",
+            "You type like you're afraid of the keyboard.",
+            "Even I wouldn't nap through your ideas.",
+            "You bring chaos to simplicity.",
+            "Your logic has... character."
+        ],
+        kind: [
+            "You're doing better than you think.",
+            "Even small progress is still progress.",
+            "You're actually pretty creative.",
+            "I approve of your effort.",
+            "You’ve got potential, human."
+        ]
+    },
+
+    robot: {
+        art: `
+ [-----]
+ | o o |
+ |  ^  |
+ | --- |
+ [-----]
+        `,
+        roasts: [
+            "Error: intelligence not found.",
+            "Processing... nope, still not impressive.",
+            "You have the efficiency of a loading screen.",
+            "Task failed successfully.",
+            "Your input confuses even me."
+        ],
+        kind: [
+            "System update: you are improving.",
+            "Your performance is acceptable. 👍",
+            "Confidence level rising.",
+            "You are learning fast.",
+            "Status: surprisingly capable."
+        ]
+    },
+
+    wizard: {
+        art: `
+   /\\
+  /  \\
+  |==|
+  |  |
+  |  |
+ /____\\
+        `,
+        roasts: [
+            "I cast... mild disappointment.",
+            "Your skill level is magically low.",
+            "Even my weakest spell has more power than that.",
+            "You failed the simplest enchantment.",
+            "Your destiny needs revision."
+        ],
+        kind: [
+            "I sense great potential within you.",
+            "Your journey has only begun.",
+            "Even masters were once beginners.",
+            "Magic grows with practice.",
+            "You are destined to improve."
+        ]
+    },
+
+    ghost: {
+        art: `
+  .-.
+ (o o)
+ | O \\
+ |   |
+ '~~~'
+        `,
+        roasts: [
+            "I've seen more life in a rock.",
+            "You haunt... but not in a cool way.",
+            "Even I have more presence than you.",
+            "Boo. That’s your best effort?",
+            "You’re barely noticeable."
+        ],
+        kind: [
+            "You stand out more than you think.",
+            "Your presence matters.",
+            "You bring something unique.",
+            "You're not invisible to the right people.",
+            "You’ve got quiet strength."
+        ]
+    },
+
+    alien: {
+        art: `
+  /\\_/\\
+ ( o o )
+  > ^ <
+        `,
+        roasts: [
+            "On my planet, this would be embarrassing.",
+            "Your intelligence is... unusual.",
+            "We came lightyears for this?",
+            "Even space is less empty than that idea.",
+            "You confuse all known species."
+        ],
+        kind: [
+            "You are uniquely human. Fascinating.",
+            "Your ideas are... interesting in a good way.",
+            "You show promise.",
+            "We approve of your development.",
+            "You are evolving."
+        ]
+    },
+
+    knight: {
+        art: `
+   O
+  /|\\
+  / \\
+        `,
+        roasts: [
+            "That was not a noble attempt.",
+            "You fight like a confused peasant.",
+            "Your strategy is questionable.",
+            "Even a squire could do better.",
+            "You dropped your skill somewhere."
+        ],
+        kind: [
+            "A noble effort indeed.",
+            "You improve with every battle.",
+            "Your courage is admirable.",
+            "You are on the right path.",
+            "A true knight in progress."
+        ]
+    }
+};
+
+function generateRoast() {
+    const selected = document.getElementById("characterSelect").value;
+    const kindMode = document.getElementById("kindMode").checked;
+
+    const character = characters[selected];
+    const lines = kindMode ? character.kind : character.roasts;
+
+    const randomLine = lines[Math.floor(Math.random() * lines.length)];
+
+    document.getElementById("ascii").textContent = character.art;
+    document.getElementById("roastText").textContent = randomLine;
+}
+</script>
+
+</body>
+</html>
